@@ -1,0 +1,8 @@
+{
+  "firebase": {
+    "projectId": "tripgether-b135a",
+    "databaseURL": "https://tripgether-b135a.firebaseio.com",
+    "storageBucket": "tripgether-b135a.appspot.com",
+    "locationId": "asia-east2"
+  }
+}
