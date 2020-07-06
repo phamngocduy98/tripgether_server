@@ -1,9 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const bodyParser = require('body-parser');
 const model = require('../model');
 
 app.use(cors({ origin: true }));
+// app.use(bodyParser.urlencoded({ 
+//     extended: true 
+// }));
 
 const authenticate = async (req, res, next) => {
     if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')) {
@@ -33,7 +37,7 @@ const authenticate = async (req, res, next) => {
                 reason: error.message || String(error),
                 code: "/auth/invalid-token"
             });
-            
+
         }
         return;
     }
@@ -43,7 +47,7 @@ app.use(authenticate);
 
 /* Receive HTTP POST request with content type application/json */
 app.post('/getUser', (req, res) => {
-    let uid = req.user.uid;
+    let uid = req.body.uid;
     model.getUser(uid).then(userPublicInfo => {
         console.log("get User " + userPublicInfo);
         res.status(200).send({
@@ -57,9 +61,38 @@ app.post('/getUser', (req, res) => {
             reason: err.message || String(error)
         }
         console.log("Fail to get user " + uid);
-        console.log("Reason: " +  err.stack || err.message || String(error));
+        console.log("Reason: " + message.reason);
         res.status(200).send(message);
     })
+})
+
+app.post('/getAllUser', async (req, res) => {
+    let uids = req.body.uids;
+    console.log(uids);
+    if (typeof uids === 'string') {
+        uids = JSON.parse(uids);
+        console.log(uids);
+    }
+    try {
+        if (!Array.isArray(uids) || uids.length === 0) throw Error("Invalid request params");
+        let users = await model.getAllUser(uids);
+        console.log(users);
+        let message = {
+            success: true,
+            data: users
+        }
+        res.status(200).send(message);
+        return message;
+    } catch (err) {
+        let message = {
+            success: false,
+            reason: err.message || String(error)
+        }
+        console.log("Fail to get users " + uids);
+        console.log("Reason: " + message.reason);
+        res.status(200).send(message);
+        return message;
+    }
 })
 
 /* Receive HTTP POST request with content type application/json */
@@ -90,7 +123,7 @@ app.post('/findUser', async (req, res) => {
             reason: err.message || String(error)
         }
         console.log("Fail to find user with email " + email + " or phoneNum = " + phoneNum);
-        console.log("Reason: " +  err.stack || err.message || String(error));
+        console.log("Reason: " + message.reason);
         res.status(200).send(message);
     }
 })
@@ -112,7 +145,7 @@ app.post('/addFriend', async (req, res) => {
             reason: err.message || String(error)
         }
         console.log(`Fail to add friend ${uid} vs ${friendId}`);
-        console.log("Reason: " +  err.stack || err.message || String(error));
+        console.log("Reason: " + message.reason);
         res.status(200).send(message);
     }
 })

@@ -65,8 +65,9 @@ app.post('/getAllPosts', (req, res) => {
 app.post('/likePost', async (req, res) => {
     let requestId = req.user.uid;
     let postId = req.body.postId;
+    let commentId = req.body.commentId;
     let like = req.body.like;
-    model.likePost(requestId, postId, like).then(val=>{
+    model.likePost(requestId, postId, commentId, like === "true").then(val=>{
         let message = {
             success : true,
         }

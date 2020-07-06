@@ -65,7 +65,7 @@ function createSharePostPage(avatarUrl, name, time, body, imageUrl) {
         <div style="background-color: #fff; border-radius: 22px; padding: 20 40;">
             <div class="row">
                 <div>
-                    <img src="${avatarUrl}" height="40px" />
+                    <img src="${avatarUrl}" style="width: 40px; height: 40px; object-position: center; object-fit: cover; border-radius: 50%;" />
                 </div>
                 <div class="col" style="justify-content: center;">
                     <div>${name}</div>
@@ -77,7 +77,7 @@ function createSharePostPage(avatarUrl, name, time, body, imageUrl) {
                 <img style="width: 100%; object-fit: none; object-position: center; max-height: 250px" class="img-fluid"
                     src="${imageUrl}" />
             </div>
-            <div class="mt-3 mb-3" style="display: flex; flex-direction: row; align-items: center; justify-content: center;">
+            <div class="mt-3 mb-3" style="display: flex; flex-direction: row; align-items: center; justify-content: center; border: solid 1px black; border-radius: 20px; height: 40px;">
                 <svg class="bi bi-download mr-1" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor"
                     xmlns="http://www.w3.org/2000/svg">
                     <path fill-rule="evenodd"
@@ -130,10 +130,13 @@ async function deleteUser(uid) {
  * @param {String} action value : {"REQUEST", "CANCEL", "ACCEPT", "REJECT", "REMOVE"} 
  */
 async function addFriend(requestUid, friendId, action) {
-    /**@type {FirebaseFirestore.DocumentSnapshot<User>} */
-    let userSnap = await db.collection('users').doc(requestUid).get();
-    /**@type {FirebaseFirestore.DocumentSnapshot<User>} */
-    let friendSnap = await db.collection('users').doc(friendId).get();
+    /**@type {FirebaseFirestore.DocumentReference<User>} */
+    let userRef = db.collection('users').doc(requestUid);
+    /**@type {FirebaseFirestore.DocumentReference<User>} */
+    let friendRef = db.collection('users').doc(friendId);
+    
+    let userSnap = await userRef.get();
+    let friendSnap = await friendRef.get();
     if (!userSnap.exists) throw new Error("requestUid not found");
     if (!friendSnap.exists) throw new Error("friendId not found");
     let userData = userSnap.data();
@@ -201,6 +204,14 @@ async function getUser(uid) {
     let userSnap = await userRef.get();
     if (!userSnap.exists) throw new Error("uid not found");
     return getUserPublicData(userSnap);
+}
+
+/**
+ * 
+ * @param {Array<String>} uids 
+ */
+function getAllUser(uids) {
+    return Promise.all(uids.map((uid)=>getUser(uid)));
 }
 
 async function findUserByEmail(email) {
@@ -441,10 +452,16 @@ async function getAllPost(requestId) {
  * 
  * @param {String} requestId
  * @param {String} postId 
+ * @param {String} commentId
  * @param {boolean} like 
  */
-async function likePost(requestId, postId, like) {
-    let postRef = db.collection("posts").doc(postId);
+async function likePost(requestId, postId, commentId, like) {
+    let postRef;
+    if (commentId){
+        postRef = db.collection("posts").doc(postId).collection("comments").doc(commentId);
+    } else {
+        postRef = db.collection("posts").doc(postId);
+    }
     let postSnap = await postRef.get();
     if (!postSnap.exists) throw Error("post not exist");
 
@@ -601,11 +618,12 @@ async function addEventCheckpoint(checkpointSnap, tripId, isAdd) {
 }
 
 exports.auth = auth;
-exports.createWebPage = createShareWebPage;
+exports.createShareWebPage = createShareWebPage;
 exports.createSharePostPage = createSharePostPage;
 exports.createUser = createUser;
 exports.deleteUser = deleteUser;
 exports.getUser = getUser;
+exports.getAllUser = getAllUser;
 exports.findUserByEmail = findUserByEmail;
 exports.findUserByPhoneNum = findUserByPhoneNum;
 exports.addFriend = addFriend;

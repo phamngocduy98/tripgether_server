@@ -34,7 +34,7 @@ app.get('/user/:userId', (req, res) => {
 app.get('/post/:postId', async (req, res) => {
     let postId = req.params.postId;
     let post = await model.getPost(null, postId);
-    let html = model.createSharePostPage(post.avatar, post.ownerName, post.time.toDate().toISOString(), post.body, post.media.url);
+    let html = model.createSharePostPage(post.avatar, post.ownerName, post.time.toDate().toISOString(), post.body, post.media ? post.media.url : "#");
     res.status(200).send(html);
 });
 
